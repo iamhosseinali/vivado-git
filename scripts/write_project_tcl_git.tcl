@@ -109,6 +109,7 @@ proc write_project_tcl_git {args} {
       "-internal"             { set a_global_vars(b_internal) 1 }
       "-quiet"                { set a_global_vars(b_arg_quiet) 1}
       "-exclude_external_ips" { set a_global_vars(exclude_external_ips) 1}
+      "-no_layout"            { set a_global_vars(b_no_layout) 1}
       default {
         # is incorrect switch specified?
         if { [regexp {^-} $option] } {
@@ -243,6 +244,7 @@ proc reset_global_vars {} {
   set a_global_vars(script_file)          ""
   set a_global_vars(b_arg_quiet)          0
   set a_global_vars(exclude_external_ips) 0
+  set a_global_vars(b_no_layout)          0
   
   if { [get_param project.enableMergedProjTcl] } {
     set a_global_vars(b_arg_use_bd_files)   0
@@ -601,9 +603,17 @@ proc write_bd_as_proc { bd_file } {
   } 
   set temp_bd_file [file join $temp_dir "temp_$temp_offset.tcl"]
   if { $a_global_vars(b_arg_no_ip_version) } {
+    if { $a_global_vars(b_no_layout) } {
+      write_bd_tcl -no_project_wrapper -no_ip_version -make_local $temp_bd_file
+    } else {
       write_bd_tcl -no_project_wrapper -no_ip_version -make_local -include_layout $temp_bd_file
+    }
+  } else {
+    if { $a_global_vars(b_no_layout) } {
+      write_bd_tcl -no_project_wrapper -make_local $temp_bd_file
     } else {
       write_bd_tcl -no_project_wrapper -make_local -include_layout $temp_bd_file
+    }  
   }
 
   # Set non default properties for the BD

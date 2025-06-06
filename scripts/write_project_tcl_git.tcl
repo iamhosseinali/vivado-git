@@ -108,6 +108,7 @@ proc write_project_tcl_git {args} {
       "-use_bd_files"         { set a_global_vars(b_arg_use_bd_files) 1 }
       "-internal"             { set a_global_vars(b_internal) 1 }
       "-quiet"                { set a_global_vars(b_arg_quiet) 1}
+      "-exclude_external_ips" { set a_global_vars(exclude_external_ips) 1}
       default {
         # is incorrect switch specified?
         if { [regexp {^-} $option] } {
@@ -241,6 +242,7 @@ proc reset_global_vars {} {
   set a_global_vars(def_val_fh)           0
   set a_global_vars(script_file)          ""
   set a_global_vars(b_arg_quiet)          0
+  set a_global_vars(exclude_external_ips) 0
   
   if { [get_param project.enableMergedProjTcl] } {
     set a_global_vars(b_arg_use_bd_files)   0
@@ -599,9 +601,9 @@ proc write_bd_as_proc { bd_file } {
   } 
   set temp_bd_file [file join $temp_dir "temp_$temp_offset.tcl"]
   if { $a_global_vars(b_arg_no_ip_version) } {
-    write_bd_tcl -no_project_wrapper -no_ip_version -make_local -include_layout $temp_bd_file
-  } else {
-    write_bd_tcl -no_project_wrapper -make_local -include_layout $temp_bd_file
+      write_bd_tcl -no_project_wrapper -no_ip_version -make_local -include_layout $temp_bd_file
+    } else {
+      write_bd_tcl -no_project_wrapper -make_local -include_layout $temp_bd_file
   }
 
   # Set non default properties for the BD
@@ -843,7 +845,9 @@ proc write_specified_fileset { proj_dir proj_name filesets } {
             } else {
               set rel_file_path "[get_relative_file_path_for_source $path [get_script_execution_dir]]"
               # Filter out IP repositories outside of the project directory
-              if { [string first .. $rel_file_path] == 0 } { continue }
+              if { $a_global_vars(exclude_external_ips) } {
+                if { [string first .. $rel_file_path] == 0 } { continue }
+              }
               set path "\[file normalize \"\$origin_dir/$rel_file_path\"\]"
               lappend path_list $path
             }

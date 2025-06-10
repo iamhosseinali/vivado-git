@@ -38,14 +38,42 @@ namespace eval ::git_wrapper {
     }
 
     proc git_init {args} {
-        # Generate gitignore file
-        set file [open ".gitignore" "w"]
-        puts $file "vivado_project/*"
-        close $file
+        # Generate main gitignore file
+        set m_file [open ".gitignore" "w"]
+        puts $m_file "vivado_project/*
+# Ignore .vscode folder because we might use vscode for editing only
+*.vscode"
+        close $m_file
+        
+        # Generate sdk gitignore file
+        # Create the directory if it doesn't exist
+        if {![file exists "sdk"]} {
+            file mkdir "sdk"
+        }
+
+        # Now open and write the .gitignore file
+        set s_file [open "sdk/.gitignore" "w"]
+        puts $s_file "# Build artifacts
+*.o
+*.a
+*.elf
+*.elf.size
+# Logs and debug
+*.log
+subdir.mk
+*.snap
+*.pdomAdded 
+*.xmi
+*.index
+# Folders related to host workspace and project settings
+/webtalk
+*.metadata
+/RemoteSystemsTempFiles"
+        close $s_file
 
         # Initialize the repo
         exec git {*}$args
-        exec git add .gitignore
+        exec git add --all
     }
 
     proc git_commit {args} {

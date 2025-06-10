@@ -71,6 +71,20 @@ subdir.mk
 /RemoteSystemsTempFiles"
         close $s_file
 
+        # Generate sdk .gitattributes file
+        set sa_file [open "sdk/.gitattributes" "w"]
+        puts $sa_file "# Enforce LF for sensitive files
+*.c     text eol=lf
+*.cpp   text eol=lf
+*.h     text eol=lf
+*.mk    text eol=lf
+*.tcl   text eol=lf
+*.sh    text eol=lf
+
+# Fallback: auto-detect for the rest
+* text=auto"
+        close $sa_file
+
         # Initialize the repo
         exec git {*}$args
         exec git add --all

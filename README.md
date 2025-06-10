@@ -51,6 +51,7 @@ Vivado is a pain in the ass to source control decently, so these scripts provide
         ├── project_name.tcl              # Project generator script
         ├── sdk/                          # Tracked sdk files
         │   ├── .gitignore                # Automatically created
+        │   ├── .gitattributes            # Automatically created
         │   ├── x_wrapper_hw_platform_x
         ├── src/                          # Tracked source files
         │   ├── design

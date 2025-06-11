@@ -401,9 +401,9 @@ proc write_project_tcl_script {} {
     } else {
       send_msg_id Vivado-projutils-015 INFO "The file paths for the project source files were set relative to the location of the generated script.\n"
     }
+    }
   }
-  }
-  
+
   if { $a_global_vars(b_arg_quiet) } {
 	reset_msg_setting
   }
@@ -610,12 +610,12 @@ proc write_bd_as_proc { bd_file } {
     }
   } else {
     if { $a_global_vars(b_no_layout) } {
-      write_bd_tcl -no_project_wrapper -make_local $temp_bd_file
+  write_bd_tcl -no_project_wrapper -make_local $temp_bd_file
     } else {
       write_bd_tcl -no_project_wrapper -make_local -include_layout $temp_bd_file
     }  
   }
-
+  
   # Set non default properties for the BD
   wr_bd_properties $bd_file
   
@@ -1199,7 +1199,7 @@ proc write_props { proj_dir proj_name get_what tcl_obj type {delim "#"}} {
     set tcl_obj [ list "$tcl_obj"]
   }
   if { [string first " " $get_what 0] != -1 } {
-    # For cases where get_what is multiple workds like "get_dashboard_gadgets -of_object..."
+    # For cases where get_what is multiple workds like "get_gadgets -of_object..."
     set current_obj [ eval $get_what $tcl_obj]
   } else {
     set current_obj [$get_what $tcl_obj]
@@ -1335,7 +1335,7 @@ proc write_props { proj_dir proj_name get_what tcl_obj type {delim "#"}} {
             continue
           }
       }
-    }
+    }  
 
     # re-align include dir path wrt origin dir
     if { [string equal -nocase $prop "include_dirs"] } {
@@ -2498,12 +2498,24 @@ proc wr_dashboards { proj_dir proj_name } {
   # get all dash boards
   # For each dash boards
   # 	create dash board
+  variable l_script_data
 
-  write_specified_dashboard $proj_dir $proj_name 
+  set dashboardsExist 0
+  set dashboards [get_dashboards]
+  foreach db $dashboards {
+    write_specified_dashboard $proj_dir $proj_name $db
+    set dashboardsExist 1
+  }
+  if { $dashboardsExist == 0} {
+    return 
+  }
 
+  set currentDashboard [current_dashboard]
+  lappend l_script_data "# Set current dashboard to '$currentDashboard' "
+  lappend l_script_data "current_dashboard $currentDashboard "
 }
 
-proc write_specified_gadget { proj_dir proj_name gadget } {
+proc write_specified_gadget { proj_dir proj_name gadget dashboard} {
   # Summary: write the specified gadget 
   # This helper command is used to script help.
   # Argument Usage: 
@@ -2511,25 +2523,26 @@ proc write_specified_gadget { proj_dir proj_name gadget } {
   # none 
   
   variable l_script_data
+  set db_name [get_property name [get_dashboards $dashboard]]
+    
+  set gadgetName [get_property name [get_gadgets -of_objects [get_dashboards $db_name] $gadget]]
+  set gadgetType [get_property type [get_gadgets -of_objects [get_dashboards $db_name] $gadget]]
 
-  set gadgetName [get_property name [get_dashboard_gadgets [list "$gadget"]]]
-  set gadgetType [get_property type [get_dashboard_gadgets [list "$gadget"]]]
-
-  set cmd_str "create_dashboard_gadget -name {$gadgetName} -type $gadgetType"
+  set cmd_str "create_gadget -name {$gadgetName} -type $gadgetType -dashboard $dashboard"
 
   lappend l_script_data "# Create '$gadgetName' gadget (if not found)"
-  lappend l_script_data "if \{\[string equal \[get_dashboard_gadgets  \[ list \"$gadget\" \] \] \"\"\]\} \{"
+  lappend l_script_data "if \{\[string equal \[get_gadgets -of_objects \[get_dashboards $db_name\] $gadget \] \"\"\]\} \{"
   lappend l_script_data "$cmd_str"
   lappend l_script_data "\}"
 
-  lappend l_script_data "set obj \[get_dashboard_gadgets \[ list \"$gadget\" \] \]"
-  set tcl_obj [get_dashboard_gadgets [list "$gadget"] ]
-  set get_what "get_dashboard_gadgets "
+  lappend l_script_data "set obj \[get_gadgets -of_objects \[get_dashboards $db_name\] $gadget \]"
+  set tcl_obj [get_gadgets -of_objects [get_dashboards $db_name] $gadget ]
+  set get_what "get_gadgets -of_objects \[get_dashboards $db_name\]"
   write_props $proj_dir $proj_name $get_what $tcl_obj "gadget" "$"
 }
 
 
-proc write_specified_dashboard { proj_dir proj_name } {
+proc write_specified_dashboard { proj_dir proj_name dashboard } {
   # Summary: write the specified dashboard 
   # This helper command is used to script help.
   # Argument Usage: 
@@ -2537,44 +2550,33 @@ proc write_specified_dashboard { proj_dir proj_name } {
   # none 
 
   variable l_script_data
+  set get_what "get_dashboards"
 
-  #Create map of gadgets wrt to their position, so that gadget position can be restored.
-  set gadgetPositionMap [dict create]
+  set dashboardName [get_property name  [$get_what $dashboard]]
+
+  lappend l_script_data "set obj \[$get_what $dashboard\]"
+  write_props $proj_dir $proj_name $get_what $dashboard "dashboard"
 
   ##get gadgets of this dashboard
-  set gadgets [get_dashboard_gadgets ]
+  set gadgets [get_gadgets -of_objects [$get_what $dashboard]]
   foreach gd $gadgets {
-    write_specified_gadget $proj_dir $proj_name $gd 
-    set gadgetCol [get_property COL [get_dashboard_gadgets [list "$gd"]]]
-    set gadgetRow [get_property ROW [get_dashboard_gadgets [list "$gd"]]]
-    dict set gadgetPositionMap $gadgetCol $gadgetRow $gd
+    write_specified_gadget $proj_dir $proj_name $gd $dashboard
   }
 
   #if current dashboard is "default_dashboard"
   #check if the above "gadgets" variable has all the default_gadgets, if any default gadget is not there in "gadgets" variable, it means user has deleted those gadgets but as part of create_project, all the default gadgets are created. So we have to delete the gadgets which user has deleted. 
-
+  set def_db "default_dashboard"
+  if { [string equal $def_db $dashboard] } {
     set default_gadgets {"drc_1" "methodology_1" "power_1" "timing_1" "utilization_1" "utilization_2"}
     foreach dgd $default_gadgets {
       #if dgd is not in gadgets, then delete dgd
       if {$dgd ni $gadgets } {
+        set cmd_str "delete_gadgets -gadgets $dgd"
         lappend l_script_data "# Delete the gadget '$dgd' "
-        lappend l_script_data "if \{\[string equal \[get_dashboard_gadgets \[ list \"$dgd\" \] \] \"$dgd\"\]\} \{"
-        set cmd_str "delete_dashboard_gadgets -gadgets $dgd"
         lappend l_script_data "$cmd_str"
-        lappend l_script_data "\}"
       }
     }
-
-
-  foreach col [lsort [dict keys $gadgetPositionMap]] {
-    set rowDict [dict get $gadgetPositionMap $col]
-    foreach row [lsort [dict keys $rowDict]] {
-      set gadgetName [dict get $rowDict $row]
-      set cmd_str "move_dashboard_gadget -name {$gadgetName} -row $row -col $col"
-      lappend l_script_data "$cmd_str"
-    }
   }
-
 }
 
 proc wr_prflow { proj_dir proj_name } {
@@ -2667,7 +2669,7 @@ proc wr_reconfigModules { proj_dir proj_name } {
     set rm_bd_dep [lindex [get_files -references -quiet -of_objects [get_reconfig_modules $rm] *.bd] 0]
     if {[llength $rm_bd_dep] == 1} {
       if {$rm_bd ni $done_bds} {
-        if { !$a_global_vars(b_arg_use_bd_files) } {
+    if { !$a_global_vars(b_arg_use_bd_files) } {
           write_bd_as_proc $rm_bd_dep
         }
         set rm1 [dict get $bd_rm_map $rm_bd_dep]
@@ -2676,11 +2678,11 @@ proc wr_reconfigModules { proj_dir proj_name } {
       }
     }
 
-    foreach rm_bd $rm_bds {
+      foreach rm_bd $rm_bds {
       # process bd only if it has not already been processed
       if {$rm_bd ni $done_bds} {
         if { !$a_global_vars(b_arg_use_bd_files) } {
-          write_bd_as_proc $rm_bd
+            write_bd_as_proc $rm_bd
         }
         set rm1 [dict get $bd_rm_map $rm_bd]
         write_specified_reconfig_module $proj_dir $proj_name $rm1
@@ -2690,7 +2692,7 @@ proc wr_reconfigModules { proj_dir proj_name } {
 
     # when no RM BDs are present
     if {[llength $rm_bds] == 0} {
-      write_specified_reconfig_module $proj_dir $proj_name $rm
+    write_specified_reconfig_module $proj_dir $proj_name $rm
     }
   }
 }

@@ -88,7 +88,7 @@ subdir.mk
         # Generate README file
         set r_file [open "README.md" "w"]
         puts $r_file {# Clone and Recreation
-This project was built with vivado 2019.1, so make sure you are using this exact version.  
+This project was built with vivado 2018.2, so make sure you are using this exact version.  
 PL projects often come with some custom IPs, these IPs can be HDL or HLS, sth like this: 
 ```
 ip_repo

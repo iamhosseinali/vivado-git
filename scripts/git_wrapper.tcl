@@ -88,7 +88,7 @@ subdir.mk
         # Generate README file
         set r_file [open "README.md" "w"]
         puts $r_file {# Clone and Recreation
-This project was built with vivado 2018.2, so make sure you are using this exact version.  
+This project was built with vivado 2019.1, so make sure you are using this exact version.  
 PL projects often come with some custom IPs, these IPs can be HDL or HLS, sth like this: 
 ```
 ip_repo
@@ -158,17 +158,33 @@ Refer to this [repo](https://github.com/iamhosseinali/vivado-git) and look for t
     }
 
     proc git_commit {args} {
-        # Get project name
-        set proj_file [current_project].tcl
+        set proj [current_project]
+        if {$proj eq ""} {
+            puts "No current project open."
+            return
+        }
 
-        # Generate project and add it
+        set proj_file "$proj.tcl"
         write_project_tcl_git -no_copy_sources -force -no_layout $proj_file
-        puts $proj_file
-        exec git add $proj_file
+        puts "Generated: $proj_file"
 
-        # Now commit everything
-        exec git {*}$args
+        # Try to stage the file, log warnings but don't abort
+        if {[catch {exec git add $proj_file} addResult]} {
+            puts "Git add warning:\n$addResult"
+        } else {
+            puts "Staged $proj_file"
+        }
+
+        # Show exact args and commit
+        puts "ARGS: $args"
+
+        if {[catch {exec git {*}$args} commitOut]} {
+            puts "Git commit failed:\n$commitOut"
+        } else {
+            puts "Git commit succeeded:\n$commitOut"
+        }
     }
+
 
     proc wproj {} {
         # Change directory project directory if not in it yet

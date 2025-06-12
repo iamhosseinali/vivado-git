@@ -158,16 +158,31 @@ Refer to this [repo](https://github.com/iamhosseinali/vivado-git) and look for t
     }
 
     proc git_commit {args} {
-        # Get project name
-        set proj_file [current_project].tcl
+        set proj [current_project]
+        if {$proj eq ""} {
+            puts "No current project open."
+            return
+        }
 
-        # Generate project and add it
+        set proj_file "$proj.tcl"
         write_project_tcl_git -no_copy_sources -force -no_layout $proj_file
-        puts $proj_file
-        exec git add $proj_file
+        puts "Generated: $proj_file"
 
-        # Now commit everything
-        exec git {*}$args
+        # Try to stage the file, log warnings but don't abort
+        if {[catch {exec git add $proj_file} addResult]} {
+            puts "Git add warning:\n$addResult"
+        } else {
+            puts "Staged $proj_file"
+        }
+
+        # Show exact args and commit
+        puts "ARGS: $args"
+
+        if {[catch {exec git {*}$args} commitOut]} {
+            puts "Git commit failed:\n$commitOut"
+        } else {
+            puts "Git commit succeeded:\n$commitOut"
+        }
     }
 
     proc wproj {} {

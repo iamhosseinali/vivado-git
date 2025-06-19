@@ -48,19 +48,49 @@ Vivado is a pain in the ass to source control decently, so these scripts provide
     PROJECT_NAME
         ├── .git
         ├── .gitignore                    # Automatically created
+        ├── README.md                     # Automatically created
         ├── project_name.tcl              # Project generator script
         ├── sdk/                          # Tracked sdk files
         │   ├── .gitignore                # Automatically created
         │   ├── .gitattributes            # Automatically created
         │   ├── x_wrapper_hw_platform_x
-        ├── src/                          # Tracked source files
-        │   ├── design
-        │   │    ├── *.v
-        │   │    └── *.vhd
-        │   ├── testbench
-        │   │    ├── *.v
-        │   │    └── *.vhd
-        │   └── ...
+        │   ├── ...
+        ├── pl_src/                          # Tracked source files
+        │   ├── *.v
+        │   ├── *.vhd
+        │   ├── *.sv
+        │   ├── *.xdc        
+        │   ├── *.wcfg        
+        ├── ip_repo/                         # Tracked custom IPs 
+        │   ├─── HDL/
+        │   │    ├── HDL_IP_1
+        │   │    │    ├── .gitignore                                
+        │   │    │    ├── component.xml                                        
+        │   │    │    ├── bd                                        
+        │   │    │    ├── drivers                                        
+        │   │    │    ├── hdl                                        
+        │   │    │    ├── src                                        
+        │   │    │    ├── xgui                                        
+        │   │    │    ├── vivado_project/                                     
+        │   │    │    ├── README.md      # Automatically created                                        
+        │   │    │    ├── example_design.tcl # IP has its own project                                 
+        │   │    ├── HDL_IP_2
+        │   │    └── ...        
+        │   ├─── HLS/
+        │   │    ├── HLS_IP_1
+        │   │    │    ├── .cproject       # Untracked generated file                             
+        │   │    │    ├── .gitignore      # Needed for HLS project recreation                              
+        │   │    │    ├── .project        # Untracked generated file                          
+        │   │    │    ├── vivado_hls.app  # Untracked generated file                           
+        │   │    │    ├── .settings       # Untracked generated file        
+        │   │    │    ├── solution1               
+        │   │    │    │    ├── directives.tcl # Tracked script
+        │   │    │    │    ├── script.tcl # This is the main script for HLS project recreation
+        │   │    │    ├── src             # Tracked source folder               
+        │   │    │    │    ├── *.cpp
+        │   │    │    │    ├── *.h
+        │   │    ├── HLS_IP_2
+        │   │    └── ...     
         └── vivado_project/          # Untracked generated files
             ├── project_name.xpr
             ├── project_name.cache/

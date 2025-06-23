@@ -144,3 +144,22 @@ generator script.
 
 If you have a system wide board part or IP repository, you will need to add it manually
 after recreating the project from the Tcl script (e.g. via `Settings --> Board Repository`).
+
+
+## Recommended .gitignore for HLS projects
+
+```
+# Ignore everything in the project
+*
+
+# Allow .gitignore itself to be tracked
+!.gitignore
+
+# Allow Git to traverse all directories
+!*/
+
+# Allow specific file globally
+!src/*
+!solution1/script.tcl
+!solution1/directives.tcl
+``` 

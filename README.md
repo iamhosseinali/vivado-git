@@ -162,4 +162,19 @@ after recreating the project from the Tcl script (e.g. via `Settings --> Board R
 !src/*
 !solution1/script.tcl
 !solution1/directives.tcl
+# Ignore everything in the project
+*
+
+# Allow .gitignore itself to be tracked
+!.gitignore
+
+# Allow Git to traverse all directories
+!*/
+
+# Allow specific files globally
+!src/*
+!solution1/script.tcl
+!solution1/directives.tcl
+!*.md
+
 ``` 

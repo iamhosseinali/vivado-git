@@ -41,6 +41,7 @@ namespace eval ::git_wrapper {
         # Generate main gitignore file
         set m_file [open ".gitignore" "w"]
         puts $m_file "vivado_project/*
+*.log
 # Ignore .vscode folder because we might use vscode for editing only
 *.vscode"
         close $m_file

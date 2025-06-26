@@ -162,4 +162,6 @@ after recreating the project from the Tcl script (e.g. via `Settings --> Board R
 !src/*
 !solution1/script.tcl
 !solution1/directives.tcl
+!*.md
+
 ``` 
